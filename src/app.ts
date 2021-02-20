@@ -25,7 +25,8 @@ app.use(bodyParser.json());
 
 const options = {
   swaggerOptions: {
-    authAction :{ JWT: {name: "JWT", schema: {type: "apiKey", in: "header", name: "Authorization", description: ""}, value: "Bearer <JWT>"} }
+    authAction :{ JWT: {name: "JWT", schema: {type: "apiKey", in: "header", name: "Authorization", description: ""}, value: "Bearer <JWT>"} },
+    withCredentials: true
   }
 };
 
@@ -34,7 +35,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
 
 RegisterRoutes(app);
 
-app.use(function notFoundHandler(_req, res: ExResponse) {
+app.use((_req: any, res: ExResponse) => {
   res.status(404).send({
     message: "Not Found",
   });
