@@ -1,33 +1,24 @@
 import { Document, Schema } from 'mongoose';
 import mongoose from '../';
-import bcrypt from 'bcrypt';
 
 export interface User extends Document { 
-    user: string;
-    password: string; 
+    state: string;
+    token?: string;
+    code?: string;
 }
 
 const UserSchema = new Schema({
-    user: {
+    state: {
         type: String,
         trim: true,
-        unique: false,
-        required: true
+        unique: true,
+        required: false
     },
-    password: {
+    token: {
         type: String,
-        required: true,
+        required: false,
         select: false
     }
 }, { timestamps: true });
-
-
-
-UserSchema.pre<User>('save', async function(next) {
-    const hash = await bcrypt.hash(this.password, 10);
-    this.password = hash;
-
-    next();
-});
 
 export default mongoose.model<User>('User', UserSchema);

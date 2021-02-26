@@ -9,10 +9,8 @@ import DeleteFailedException from "../exceptions/DeleteFailedException";
 
 export default class UserRepository {
   public async create(user: UserModel) {
-    const userDataBase = await User.findOne({ email: user._id });
-    if (userDataBase) {
-      throw new RegistrationFailedException(UserController.USER_EXISTS);
-    } else {
+    const userDataBase = await User.findOne({ state: user.state });
+    if (!userDataBase) {
       try {
         const userCreated = await User.create(user);
         return userCreated;
@@ -21,13 +19,22 @@ export default class UserRepository {
           UserController.UNPROCESSABLE_ENTITY
         );
       }
+    } else {
+      try {
+        const userUpdated = await this.update(user);
+        return userUpdated;
+      } catch (err) {
+        throw new RegistrationFailedException(
+          UserController.UNPROCESSABLE_ENTITY
+        );
+      }
     }
   }
 
-  public async update(user: any) {
+  public async update(user: UserModel) {
     try {
-      const { _id } = user;
-      const userUpdated = await User.findByIdAndUpdate({ _id }, user, {
+      const { state } = user;
+      const userUpdated = await User.findOneAndUpdate({ state }, user, {
         new: true,
       }).lean();
       return userUpdated;
@@ -58,9 +65,9 @@ export default class UserRepository {
     }
   }
 
-  public async getByEmail(email: string) {
+  public async getByState(state: string) {
     try {
-      const user = await User.findOne({ email }).select("+password").orFail();
+      const user = await User.findOne({ state }).orFail();
       return user;
     } catch (err) {
       throw new BusinessException(AuthConstants.USER_INVALID);

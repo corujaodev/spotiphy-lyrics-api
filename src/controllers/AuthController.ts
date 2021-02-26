@@ -1,30 +1,45 @@
 
-import { AuthService } from '../services/AuthService';
-import { Body, Controller, Post, Route, SuccessResponse } from "tsoa";
+import { Controller, Route, SuccessResponse, Get } from "tsoa";
 import HttpStatus from 'http-status-codes';
+import querystring from 'querystring';
 
-const authService = new AuthService();
+
+import { StringUtil } from '../utils/StringUtil';
+import { authConfig } from '../config/AuthConfig';
+
+import { UserService } from "../services/UserService";
+import { SpotifyService } from '../services/SpotifyService';
+import { PuppeteerService } from '../services/PuppeteerService';
+
+const stringUtil = new StringUtil();
+const userService = new UserService();
+const spotifyService = new SpotifyService();
+const puppeteerService = new PuppeteerService();
 
 @Route("authenticate")
 export class AuthController extends Controller {
-    @SuccessResponse(HttpStatus.CREATED, HttpStatus.getStatusText(HttpStatus.CREATED))
-    @Post()
-    public async login(
-        @Body() requestBody: any
-    ): Promise<any> {  
-        const {email, password} = requestBody
-        const user = await authService.login(email, password);
-        this.setStatus(HttpStatus.OK);
-        return user;
+    @SuccessResponse(HttpStatus.OK, HttpStatus.getStatusText(HttpStatus.OK))
+    @Get("login")
+    public async login(): Promise<any> {
+        const state = stringUtil.generateRandomString(16);
+        await userService.create({ state });
+        const user = await userService.getByState(state);
+
+        const querystringValue = {
+            state: user.state,
+            response_type: 'code',
+            client_id: authConfig.spotifyClientId,
+            scope: authConfig.spotifyScope,
+            redirect_uri: authConfig.spotifyRedirectUri
+        }
+
+        const url = querystring.stringify(querystringValue);
+        const fullUrlLogin = `${authConfig.spotifyUrlAuthorize}${url}`;
+        const urlCallback = await puppeteerService.getCallbackData(fullUrlLogin);
+
+        const callback = await spotifyService.handleCallback(urlCallback)
+
+        return callback;
     }
 
-    @SuccessResponse(HttpStatus.OK, HttpStatus.getStatusText(HttpStatus.OK))
-    @Post("validate-token")
-    public async validateToken(
-        @Body() requestBody: any
-    ): Promise<any> {  
-        const isValid = await authService.validateToken(requestBody);
-        this.setStatus(HttpStatus.OK);
-        return isValid;
-    }
 }

@@ -7,7 +7,7 @@ import moment from 'moment';
 
 export interface ValidateTokenPropos {
     token: string;
-    email: string;
+    _id: string;
 }
 
 interface DecodedProps {
@@ -26,7 +26,7 @@ class JWTUtil {
 
     }
 
-    validateToken(_id: string, data: ValidateTokenPropos) {
+    validateToken(data: ValidateTokenPropos) {
         let isValid = null;
         jwt.verify(data.token, authConfig.secret, (err, decoded: any) => {
             if (err) {
@@ -35,7 +35,7 @@ class JWTUtil {
             if(decoded) {
                 const decodedValue: DecodedProps = decoded;
                 isValid = {
-                    valid: this.compareAndValidateDecodedData(decodedValue.id, decodedValue.exp, _id),
+                    valid: this.compareAndValidateDecodedData(decodedValue.id, decodedValue.exp, data._id),
                     exp: moment.unix(decodedValue.exp)
                 }
             }

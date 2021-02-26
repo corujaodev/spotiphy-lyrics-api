@@ -2,7 +2,7 @@ import { Mongoose } from "mongoose";
 
 const mongoose = new Mongoose();
 
-const uri = 'mongodb+srv://upnoingles:inglesnoup@upnoingles.y6dxv.mongodb.net/up_no_ingles?retryWrites=true&w=majority';
+const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}${process.env.MONGO_DB}?retryWrites=true&w=majority`;
 mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
