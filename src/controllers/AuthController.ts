@@ -24,6 +24,33 @@ export class AuthController extends Controller {
         const { spotifyUser, spotifyPassword } = requestBody
         await userService.create({ userEmail: spotifyUser, state: spotifyUser });
         
+        const fullUrlLogin = `${authConfig.spotifyUrlAuthorize}${this.getUrl(spotifyUser)}`;
+        const urlCallback = await puppeteerService.getCallbackData(fullUrlLogin, spotifyUser, spotifyPassword);
+
+        const callback = await spotifyService.handleCallback(urlCallback)
+
+        return callback;
+    }
+
+    @Post("getMyCurrentPlayingTrack")
+    public async getMyCurrentPlayingTrack (
+        @Body() requestBody: LoginRequest
+    ): Promise<any> {
+        const { spotifyUser } = requestBody
+        const user = await userService.getByEmail(spotifyUser)
+        let currentPlayingTrack = null;
+
+        if(user != null) {
+            currentPlayingTrack = await spotifyService.getMyCurrentPlayingTrack(user);
+        }
+
+        console.log({ currentPlayingTrack });
+        return currentPlayingTrack;
+    }
+
+
+
+    private getUrl(spotifyUser: string) {
         const querystringValue = {
             state: spotifyUser,
             response_type: 'code',
@@ -33,12 +60,8 @@ export class AuthController extends Controller {
         }
 
         const url = querystring.stringify(querystringValue);
-        const fullUrlLogin = `${authConfig.spotifyUrlAuthorize}${url}`;
-        const urlCallback = await puppeteerService.getCallbackData(fullUrlLogin, spotifyUser, spotifyPassword);
 
-        const callback = await spotifyService.handleCallback(urlCallback)
-
-        return callback;
+        return url;
     }
 
 }

@@ -9,6 +9,7 @@ import { Error } from '../models/errors/Error';
 import { User } from '../database/schemas/User';
 import StringUtil from '../utils/StringUtil';
 
+
 const getLyrics = require('genius-lyrics-api/lib/getLyrics');
 
 const stringUtil = new StringUtil();
@@ -176,9 +177,11 @@ export class SpotifyService {
         return response;
     }
 
-    public getMyCurrentPlayingTrack() {
+    public async getMyCurrentPlayingTrack(user: User) {
+        console.log("getMyCurrentPlayingTrack for user ", user)
         let response = null;
-        this.spotifyApi.getMyCurrentPlayingTrack().then((data) => {
+        this.setCredentials(user);
+        await this.spotifyApi.getMyCurrentPlayingTrack().then((data) => {
             response = data.body.item;
         }, (err) => {
             response = this.handleError(err)
@@ -262,5 +265,10 @@ export class SpotifyService {
         } else {
             // res.send({ "ERROR": err });
         }
+    }
+
+    private setCredentials(user: User) {
+        this.spotifyApi.setAccessToken(user.token ? user.token : "");
+        this.spotifyApi.setRefreshToken(user.refreshToken ? user.refreshToken : "");
     }
 }
