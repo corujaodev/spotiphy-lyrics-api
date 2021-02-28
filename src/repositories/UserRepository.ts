@@ -9,7 +9,7 @@ import DeleteFailedException from "../exceptions/DeleteFailedException";
 
 export default class UserRepository {
   public async create(user: UserModel) {
-    const userDataBase = await User.findOne({ state: user.state });
+    const userDataBase = await User.findOne({ userEmail: user.userEmail });
     if (!userDataBase) {
       try {
         const userCreated = await User.create(user);
@@ -33,8 +33,8 @@ export default class UserRepository {
 
   public async update(user: UserModel) {
     try {
-      const { state } = user;
-      const userUpdated = await User.findOneAndUpdate({ state }, user, {
+      const { userEmail } = user;
+      const userUpdated = await User.findOneAndUpdate({ userEmail }, user, {
         new: true,
       }).lean();
       return userUpdated;
@@ -65,9 +65,9 @@ export default class UserRepository {
     }
   }
 
-  public async getByState(state: string) {
+  public async getByEmail(userEmail: string) {
     try {
-      const user = await User.findOne({ state }).orFail();
+      const user = await User.findOne({ userEmail }).orFail();
       return user;
     } catch (err) {
       throw new BusinessException(AuthConstants.USER_INVALID);

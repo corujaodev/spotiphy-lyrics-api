@@ -4,8 +4,8 @@ import puppeteer from 'puppeteer';
 export class PuppeteerService {
 
 
-    async getCallbackData(urlLogin: string): Promise<string> {
-        const browser = await puppeteer.launch({ headless: true })
+    async getCallbackData(urlLogin: string, spotifyUser: string, spotifyPassword: string): Promise<string> {
+        const browser = await puppeteer.launch({ headless: false })
         const page = await browser.newPage();
 
 
@@ -13,11 +13,8 @@ export class PuppeteerService {
             waitUntil: 'networkidle0'
         })
 
-        const userSpotify = "josericardodainese@gmail.com"
-        const passwordSpotify = "Jr142022@#$"
-
-        await page.type("#login-username", userSpotify)
-        await page.type("#login-password", passwordSpotify)
+        await page.type("#login-username", spotifyUser)
+        await page.type("#login-password", spotifyPassword)
 
         page.click("#login-button")
         await page.waitForNavigation()

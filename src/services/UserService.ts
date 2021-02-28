@@ -12,9 +12,9 @@ export class UserService {
         }
     }
 
-    public getByState(state: string) {
+    public async getByEmail(userEmail: string) {
         try {
-            return this.userRepository.getByState(state);
+            return this.userRepository.getByEmail(userEmail);
         } catch (err) {
             throw err;
         }

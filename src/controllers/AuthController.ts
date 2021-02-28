@@ -1,17 +1,15 @@
 
-import { Controller, Route, SuccessResponse, Get } from "tsoa";
+import { Controller, Route, SuccessResponse, Post, Body } from "tsoa";
 import HttpStatus from 'http-status-codes';
 import querystring from 'querystring';
 
-
-import { StringUtil } from '../utils/StringUtil';
 import { authConfig } from '../config/AuthConfig';
 
 import { UserService } from "../services/UserService";
 import { SpotifyService } from '../services/SpotifyService';
 import { PuppeteerService } from '../services/PuppeteerService';
+import { LoginRequest } from '../models/LoginRequest';
 
-const stringUtil = new StringUtil();
 const userService = new UserService();
 const spotifyService = new SpotifyService();
 const puppeteerService = new PuppeteerService();
@@ -19,14 +17,15 @@ const puppeteerService = new PuppeteerService();
 @Route("authenticate")
 export class AuthController extends Controller {
     @SuccessResponse(HttpStatus.OK, HttpStatus.getStatusText(HttpStatus.OK))
-    @Get("login")
-    public async login(): Promise<any> {
-        const state = stringUtil.generateRandomString(16);
-        await userService.create({ state });
-        const user = await userService.getByState(state);
-
+    @Post("login")
+    public async login(
+        @Body() requestBody: LoginRequest
+    ): Promise<any> {
+        const { spotifyUser, spotifyPassword } = requestBody
+        await userService.create({ userEmail: spotifyUser, state: spotifyUser });
+        
         const querystringValue = {
-            state: user.state,
+            state: spotifyUser,
             response_type: 'code',
             client_id: authConfig.spotifyClientId,
             scope: authConfig.spotifyScope,
@@ -35,7 +34,7 @@ export class AuthController extends Controller {
 
         const url = querystring.stringify(querystringValue);
         const fullUrlLogin = `${authConfig.spotifyUrlAuthorize}${url}`;
-        const urlCallback = await puppeteerService.getCallbackData(fullUrlLogin);
+        const urlCallback = await puppeteerService.getCallbackData(fullUrlLogin, spotifyUser, spotifyPassword);
 
         const callback = await spotifyService.handleCallback(urlCallback)
 
